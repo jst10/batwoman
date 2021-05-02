@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+const tokenCookieName = "token"
+const refreshCookieName = "refresh_token"
+
+
 func StartApi() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	// Auth routes

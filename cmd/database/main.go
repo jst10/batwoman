@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
+var db *gorm.DB
 func InitDatabase() {
 	fmt.Println("InitDatabase")
 	dsn := "root:root@tcp(127.0.0.1:3306)/batwoman?charset=utf8mb4&parseTime=True&loc=Local"
