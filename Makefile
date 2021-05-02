@@ -4,3 +4,10 @@ run:
 build:
 	cd cmd; go build -o ../bin/hancock
 
+stop-local-db:
+	docker rm -f mysql
+
+start-local-db:
+	docker run --name mysql  -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=batwoman -p 3306:3306 -d mysql:latest
+
+restart-local-db:stop-local-db start-local-db

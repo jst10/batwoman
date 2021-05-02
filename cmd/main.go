@@ -1,7 +1,11 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"made.by.jst10/celtra/batwoman/cmd/database"
+)
 
 func main(){
 	fmt.Println("It works")
+	database.InitDatabase()
 }
