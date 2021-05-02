@@ -5,6 +5,7 @@ type Note struct {
 	CreatedAt  string     `json:"created_at"`
 	UpdatedAt  string     `json:"updated_at"`
 	IsListNote bool       `json:"is_list_note"`
+	IsPublic   bool       `json:"is_public"`
 	OwnerID    uint       `json:"owner_id"`
 	Owner      User       `json:"owner"`
 	FolderID   uint       `json:"folder_id"`

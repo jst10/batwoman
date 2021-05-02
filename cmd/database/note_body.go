@@ -5,5 +5,5 @@ type NoteBody struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 	NoteID    uint   `json:"note_id"`
-	Message   string `json:"message"`
+	Text   string `json:"text"`
 }
