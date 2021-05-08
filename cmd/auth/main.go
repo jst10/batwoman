@@ -7,14 +7,16 @@ import (
 )
 
 func AuthenticateUser(authData *structs.AuthData) (*structs.TokenWrapper, *structs.TokenWrapper, *custom_errors.CustomError) {
-	user, err := database.GetUserByUsername(authData.Username)
+	userController := database.User{}
+	user, err := userController.GetByUsername(authData.Username)
 	if err != nil {
 		return nil, nil, err.AST("authenticate user")
 	}
 	if !doPasswordsMatch(user, authData.Password) {
 		return nil, nil, custom_errors.GetNotValidDataError("invalid auth data")
 	}
-	session, err := database.CreateSession(&database.Session{UserId: user.ID})
+	session := &database.Session{UserID: user.ID}
+	session, err = session.Create()
 	if err != nil {
 		return nil, nil, err.AST("authenticate user")
 	}
@@ -22,7 +24,6 @@ func AuthenticateUser(authData *structs.AuthData) (*structs.TokenWrapper, *struc
 		UserId:    user.ID,
 		CreatedAt: user.CreatedAt,
 		Username:  user.Username,
-		Role:      user.Role,
 		SessionId: session.ID}
 
 	token, tokenExpiration, err := createJWT(&tokenData)
@@ -39,12 +40,14 @@ func AuthenticateUser(authData *structs.AuthData) (*structs.TokenWrapper, *struc
 	refreshTokenWrapper := structs.TokenWrapper{User: user, Token: refreshToken, Expiration: refreshTokenExpiration}
 	return &tokenWrapper, &refreshTokenWrapper, nil
 }
-func ReAuthenticateUser(sessionId int) (*structs.TokenWrapper, *custom_errors.CustomError) {
-	session, err := database.GetSessionById(sessionId)
+func ReAuthenticateUser(sessionId uint) (*structs.TokenWrapper, *custom_errors.CustomError) {
+	userController := database.User{}
+	sessionController := database.Session{}
+	session, err := sessionController.GetByID(sessionId)
 	if err != nil {
 		return nil, err.AST("re authenticate user")
 	}
-	user, err := database.GetUserById(session.UserId)
+	user, err := userController.GetByID(session.UserID)
 	if err != nil {
 		return nil, err.AST("re authenticate user")
 	}
@@ -52,22 +55,22 @@ func ReAuthenticateUser(sessionId int) (*structs.TokenWrapper, *custom_errors.Cu
 		UserId:    user.ID,
 		CreatedAt: user.CreatedAt,
 		Username:  user.Username,
-		Role:      user.Role,
 		SessionId: session.ID}
 
 	token, tokenExpiration, err := createJWT(&tokenData)
 	if err != nil {
 		return nil, err.AST("re authenticate user")
 	}
-
 	return &structs.TokenWrapper{User: user, Token: token, Expiration: tokenExpiration}, nil
 }
-func DeAuthenticateUser(userId int) *custom_errors.CustomError {
-	user, err := database.GetUserById(userId)
+func DeAuthenticateUser(userId uint) (int64, *custom_errors.CustomError) {
+	userController := database.User{}
+	sessionController := database.Session{}
+	user, err := userController.GetByID(userId)
 	if err != nil {
-		return err.AST("de authenticate user")
+		return 0, err.AST("de authenticate user")
 	}
-	return database.DeleteUserSessions(user.ID)
+	return sessionController.DeleteByUserId(user.ID)
 }
 
 func VerifyJWT(token string) (*structs.TokenData, *custom_errors.CustomError) {

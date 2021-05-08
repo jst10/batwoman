@@ -1,105 +1,91 @@
 package api
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
-	"io/ioutil"
+	"made.by.jst10/celtra/batwoman/cmd/custom_errors"
 	"made.by.jst10/celtra/batwoman/cmd/database"
 	"net/http"
 	"strconv"
 )
 
 func createUser(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		respondError(w, http.StatusUnprocessableEntity, err)
-	}
-	user := database.User{}
-	err = json.Unmarshal(body, &user)
+	userFromRequestBody := database.User{}
+	err := decodeJSONBody(w, r, userFromRequestBody)
 	if err != nil {
 		respondError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-
-	userCreated, err := user.SaveUser()
-
+	createdUser, err := userFromRequestBody.Create()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
-	w.Header().Set("Location", fmt.Sprintf("%s%s/%d", r.Host, r.RequestURI, userCreated.ID))
-	respondJSON(w, http.StatusCreated, userCreated)
+	respondJSON(w, http.StatusCreated, createdUser)
 }
+
 func getUsers(w http.ResponseWriter, r *http.Request) {
-
-	user := database.User{}
-
-	users, err := user.FindAllUsers()
+	userController := database.User{}
+	users, err := userController.All()
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, users)
 }
+
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	user, err := getUserFromRequest(r)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err)
+		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
-	user := database.User{}
-	userGotten, err := user.FindUserByID(uint32(uid))
-	if err != nil {
-		respondError(w, http.StatusBadRequest, err)
-		return
-	}
-	respondJSON(w, http.StatusOK, userGotten)
+	respondJSON(w, http.StatusOK, user)
 }
+
 func updateUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+	userFromRequestParam, err := getUserFromRequest(r)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err)
+		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		respondError(w, http.StatusUnprocessableEntity, err)
-		return
-	}
-	user := database.User{}
-	err = json.Unmarshal(body, &user)
+	userFromRequestBody := database.User{}
+	err = decodeJSONBody(w, r, userFromRequestBody)
 	if err != nil {
 		respondError(w, http.StatusUnprocessableEntity, err)
 		return
 	}
-	if err != nil {
-		respondError(w, http.StatusUnprocessableEntity, err)
-		return
-	}
-	updatedUser, err := user.UpdateAUser(uint32(uid))
+	updatedUser, err := userFromRequestBody.Update(userFromRequestParam.ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
 	respondJSON(w, http.StatusOK, updatedUser)
 }
-func deleteUser(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	user := database.User{}
 
-	uid, err := strconv.ParseUint(vars["id"], 10, 32)
+func deleteUser(w http.ResponseWriter, r *http.Request) {
+	oldUser, err := getUserFromRequest(r)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err)
+		respondError(w, http.StatusNotFound, err)
 		return
 	}
-	_, err = user.DeleteAUser(uint32(uid))
+	userController := database.User{}
+	_, err = userController.DeleteById(oldUser.ID)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err)
 		return
 	}
-	w.Header().Set("Entity", fmt.Sprintf("%d", uid))
 	respondJSON(w, http.StatusNoContent, "")
+}
+func getUserFromRequest(r *http.Request) (*database.User, *custom_errors.CustomError) {
+	vars := mux.Vars(r)
+	uid, parsingError := strconv.ParseUint(vars["id"], 10, 32)
+	if parsingError != nil {
+		return nil, custom_errors.GetParsingError(parsingError, "id")
+	}
+	userController := database.User{}
+	user, err := userController.GetByID(uint(uid))
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

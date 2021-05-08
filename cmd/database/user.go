@@ -1,6 +1,7 @@
 package database
 
 import (
+	"made.by.jst10/celtra/batwoman/cmd/custom_errors"
 	"time"
 )
 
@@ -13,56 +14,65 @@ type User struct {
 	Salt      string `json:"salt" gorm:"size:512;not null;"`
 }
 
-func (u *User) SaveUser() (*User, error) {
-	var err error
-	err = db.Debug().Create(&u).Error
-	if err != nil {
-		return &User{}, err
+func (item *User) Create() (*User, *custom_errors.CustomError) {
+	result := db.Debug().Create(&item)
+	if result.Error != nil {
+		return &User{}, custom_errors.GetDbError(result.Error, getType(item)+"->Create")
 	}
-	return u, nil
+	return item, nil
 }
 
-func (u *User) FindAllUsers() (*[]User, error) {
-	var err error
-	users := []User{}
-	err = db.Debug().Model(&User{}).Limit(100).Find(&users).Error
-	if err != nil {
-		return &[]User{}, err
-	}
-	return &users, err
-}
-
-func (u *User) FindUserByID(uid uint32) (*User, error) {
-	var err error
-	err = db.Debug().Model(User{}).Where("id = ?", uid).Take(&u).Error
-	if err != nil {
-		return &User{}, err
-	}
-	return u, err
-}
-
-func (u *User) UpdateAUser(uid uint32) (*User, error) {
-	db = db.Debug().Model(&User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
+func (item *User) Update(uid uint) (*User, *custom_errors.CustomError) {
+	result := db.Debug().Model(&User{}).Where("id = ?", uid).Take(&User{}).UpdateColumns(
 		map[string]interface{}{
-			"password":   u.Password,
-			"username":   u.Username,
+			"password":   item.Password,
+			"username":   item.Username,
 			"updated_at": time.Now(),
 		},
 	)
-	if db.Error != nil {
-		return &User{}, db.Error
+	if result.Error != nil {
+		return &User{}, custom_errors.GetDbError(result.Error, getType(item)+"->Update")
 	}
-	err := db.Debug().Model(&User{}).Where("id = ?", uid).Take(&u).Error
-	if err != nil {
-		return &User{}, err
-	}
-	return u, nil
+	return item.GetByID(uid)
 }
 
-func (u *User) DeleteAUser(uid uint32) (int64, error) {
-	db = db.Debug().Model(&User{}).Where("id = ?", uid).Take(&User{}).Delete(&User{})
-	if db.Error != nil {
-		return 0, db.Error
+func (item *User) All() (*[]User, *custom_errors.CustomError) {
+	items := []User{}
+	result := db.Debug().Model(&User{}).Limit(100).Find(&items)
+	if result.Error != nil {
+		return &[]User{}, custom_errors.GetDbError(result.Error, getType(item)+"->All")
+	}
+	return &items, nil
+}
+
+func (item *User) GetByID(id uint) (*User, *custom_errors.CustomError) {
+	result := db.Debug().Model(User{}).Where("id = ?", id).Take(&item)
+	if result.Error != nil {
+		return &User{}, custom_errors.GetDbError(result.Error, getType(item)+"->GetByID")
+	}
+	return item, nil
+}
+
+func (item *User) GetByUsername(username string) (*User,  *custom_errors.CustomError) {
+	result := db.Debug().Model(User{}).Where("username = ?", username).Take(&item)
+	if result.Error != nil {
+		return &User{}, custom_errors.GetDbError(result.Error, getType(item)+"->GetByUsername")
+	}
+	return item, nil
+}
+
+func (item *User) DeleteById(id uint) (int64, *custom_errors.CustomError) {
+	result := db.Debug().Model(&User{}).Where("id = ?", id).Take(&User{}).Delete(&User{})
+	if result.Error != nil {
+		return 0, custom_errors.GetDbError(result.Error, getType(item)+"->DeleteById")
+	}
+	return result.RowsAffected, nil
+}
+
+func (item *User) DeleteAll() (int64, *custom_errors.CustomError) {
+	result := db.Debug().Model(&User{}).Where("1=1").Delete(&User{})
+	if result.Error != nil {
+		return 0, custom_errors.GetDbError(result.Error, getType(item)+"->DeleteAll")
 	}
 	return db.RowsAffected, nil
 }

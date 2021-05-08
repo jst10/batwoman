@@ -6,6 +6,9 @@ func GetNotFoundError() *CustomError {
 func GetMissingQueryParamError(details string) *CustomError {
 	return &CustomError{Code: 2, Info: "Missing query param", Details: details}
 }
+func GetParsingError(originalError error, details string) *CustomError {
+	return &CustomError{Code: 2,  OriginalError: originalError, Info: "Parsing error", Details: details}
+}
 func GetCookieNotPresentError(details string) *CustomError {
 	return &CustomError{Code: 3, Info: "Missing cookie", Details: details}
 }
@@ -44,4 +47,7 @@ func GetErrorLoadingConfigs(originalError error, details string) *CustomError {
 }
 func GetNotFoundErrrr(originalError error) *CustomError {
 	return &CustomError{Code: 15, OriginalError: originalError, Info: "Not found"}
+}
+func GetDbError(originalError error, details string) *CustomError {
+	return &CustomError{Code: 16, OriginalError: originalError, Info: "Db  error"}
 }
