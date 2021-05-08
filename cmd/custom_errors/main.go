@@ -49,5 +49,9 @@ func GetNotFoundErrrr(originalError error) *CustomError {
 	return &CustomError{Code: 15, OriginalError: originalError, Info: "Not found"}
 }
 func GetDbError(originalError error, details string) *CustomError {
-	return &CustomError{Code: 16, OriginalError: originalError, Info: "Db  error"}
+	return &CustomError{Code: 16, OriginalError: originalError, Info: "Db  error", Details: details}
+}
+
+func GetForbiddenError(details string) *CustomError {
+	return &CustomError{Code: 1, Info: "Forbidden ", Details: details}
 }

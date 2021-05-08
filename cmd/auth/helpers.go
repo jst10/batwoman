@@ -14,7 +14,7 @@ import (
 var jwtKey = []byte("tokenKey")
 var jwrtKey = []byte("refreshTokenKey")
 
-func createSalt() (string, *custom_errors.CustomError) {
+func CreateSalt() (string, *custom_errors.CustomError) {
 	var salt = make([]byte, 64)
 	_, err := rand.Read(salt[:])
 	if err != nil {
@@ -22,7 +22,7 @@ func createSalt() (string, *custom_errors.CustomError) {
 	}
 	return base64.URLEncoding.EncodeToString(salt), nil
 }
-func createHash(password string, salt string) string {
+func CreateHash(password string, salt string) string {
 	var passwordBytes = []byte(password)
 	var saltBytes = []byte(salt)
 	var sha512Hasher = sha512.New()
@@ -34,7 +34,7 @@ func createHash(password string, salt string) string {
 }
 
 func doPasswordsMatch(user *database.User, enteredPassword string) bool {
-	var enteredPasswordHash = createHash(enteredPassword, user.Salt)
+	var enteredPasswordHash = CreateHash(enteredPassword, user.Salt)
 	return user.Password == enteredPasswordHash
 }
 

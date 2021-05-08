@@ -6,6 +6,7 @@ import (
 	"made.by.jst10/celtra/batwoman/cmd/structs"
 )
 
+
 func AuthenticateUser(authData *structs.AuthData) (*structs.TokenWrapper, *structs.TokenWrapper, *custom_errors.CustomError) {
 	userController := database.User{}
 	user, err := userController.GetByUsername(authData.Username)

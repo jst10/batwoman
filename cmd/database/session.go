@@ -7,10 +7,10 @@ import (
 
 type Session struct {
 	ID        uint      `json:"id" gorm:"primaryKey;auto_increment"`
-	CreatedAt time.Time `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP"`
-	UserID    uint      `json:"user_id" sql:"type:int REFERENCES users(id)"`
-	User      User      `json:"owner"`
+	CreatedAt time.Time `json:"created_at" gorm:"not null"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"not null"`
+	UserID    uint      `json:"user_id" gorm:"not null" sql:"type:int REFERENCES users(id)"`
+	User      User      `json:"owner" gorm:"constraint:OnDelete:CASCADE"`
 }
 
 func (item *Session) Create() (*Session, *custom_errors.CustomError) {

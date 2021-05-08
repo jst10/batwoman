@@ -1,13 +1,19 @@
 package api
 
 import (
+	"context"
 	"net/http"
-
 )
 
-func SetMiddlewareJSON(next http.HandlerFunc) http.HandlerFunc {
+func setMiddlewareAuthentication(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		tokenData, err := authenticateRequest(r)
+		if err != nil {
+			respondError(w, http.StatusUnauthorized, err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "token", tokenData)
+		r=r.WithContext(ctx)
 		next(w, r)
 	}
 }

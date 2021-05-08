@@ -1,13 +1,16 @@
 package api
 
 import (
+	"fmt"
 	"made.by.jst10/celtra/batwoman/cmd/auth"
 	"made.by.jst10/celtra/batwoman/cmd/structs"
 	"net/http"
 )
 
 func authenticate(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("authenticate")
 	var authData structs.AuthData
+	fmt.Print(authData)
 	err := decodeJSONBody(w, r, &authData)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, err)
@@ -62,7 +65,7 @@ func deAuthenticate(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusUnauthorized, err)
 		return
 	}
-	err = auth.DeAuthenticateUser(tokenData.UserId)
+	_, err = auth.DeAuthenticateUser(tokenData.UserId)
 	if err != nil {
 		respondError(w, http.StatusInternalServerError, err)
 		return
