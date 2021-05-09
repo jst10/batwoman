@@ -51,3 +51,20 @@ func authenticate(client *http.Client, user *structs.AuthData) *structs.TokensRe
 	extractBody(resp.Body, dst)
 	return dst
 }
+
+func assertEqualInt(fist int, second int) {
+	if fist != second {
+		log.Fatal("Not equal", fist, second)
+	}
+}
+
+func assertEqualUint(fist uint, second uint) {
+	if fist != second {
+		log.Fatal("Not equal", fist, second)
+	}
+}
+func assertEqualString(fist string, second string) {
+	if fist != second {
+		log.Fatal("Not equal", fist, second)
+	}
+}

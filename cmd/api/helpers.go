@@ -7,6 +7,9 @@ import (
 	"made.by.jst10/celtra/batwoman/cmd/custom_errors"
 	"made.by.jst10/celtra/batwoman/cmd/structs"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 )
 
 func respondJSON(w http.ResponseWriter, statusCode int, data interface{}) {
@@ -51,4 +54,51 @@ func authenticateRequest( r *http.Request) (*structs.TokenData, *custom_errors.C
 		return nil, err
 	}
 	return tokenData, nil
+}
+
+
+
+func getPageFromQuery(query url.Values) int {
+	page, _ := strconv.Atoi(query.Get("page"))
+	if page == 0 {
+		page = 1
+	}
+	return page
+}
+func getPageSizeFromQuery(query url.Values) int {
+	pageSize, _ := strconv.Atoi(query.Get("page_size"))
+	switch {
+	case pageSize > 100:
+		pageSize = 100
+	case pageSize <= 0:
+		pageSize = 10
+	}
+	return pageSize
+}
+func stringInSlice(text string, list []string) bool {
+	for _, item := range list {
+		if item == text {
+			return true
+		}
+	}
+	return false
+}
+
+func getOrderFromQuery(query url.Values, validFields []string) (string, string) {
+	orderBy := query.Get("order_by")
+	if len(orderBy) > 0 {
+		var orderDirection string
+		if strings.HasPrefix(orderBy, "-") {
+			orderDirection = "DESC"
+		} else {
+			orderDirection = "ASC"
+		}
+		if strings.HasPrefix(orderBy, "-") || strings.HasPrefix(orderBy, "+") {
+			orderBy = orderBy[1:]
+		}
+		if stringInSlice(orderBy, validFields) {
+			return orderBy, orderDirection
+		}
+	}
+	return "", ""
 }
